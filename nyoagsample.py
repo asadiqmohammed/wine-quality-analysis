@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import missingno as msno
+# import missingno as msno
 import os
 import pandas as pd
 from sklearn.preprocessing import PolynomialFeatures,StandardScaler
@@ -19,10 +19,7 @@ if __name__ == '__main__':
     #  Loading Data
     #------------------------
     seed = 123321
-    data_dir = r'C:\Users\SADIQ\Desktop\Bachelors\Machine Learning\MIS\MIS\data'
-    out_dir = './work/Labs/week4'
-    file_name = 'winequality-red.csv'
-    path = os.path.join(data_dir,file_name)
+    path = os.path.join(os.path.dirname(__file__), 'winequality-red.csv')
 
     df = pd.read_csv(path,encoding='ISO-8859-1',header=0)
 
@@ -32,8 +29,8 @@ if __name__ == '__main__':
     #---------------------------------------------------------------
     #  See missing data
     #---------------------------------------------------------------
-    msno.matrix(df)
-    plt.show()
+    # msno.matrix(df)
+    # plt.show()
 
 
     #---------------------------------------------------------------
@@ -56,15 +53,14 @@ if __name__ == '__main__':
     #makes heat map and saves it 
     sns.set(font_scale=0.6)    
     sns.heatmap(corr, annot=True)
-    plt.show()
-    # the alchol and acidity volitality affect correlation the most 
-    # file_name = 'heatmap4-5.png'
-    # path = os.path.join
-    # path = os.path.join(out_dir,file_name)
-    # plt.savefig(path)
+    plt.title('Feature Correlation Heatmap')
+    plt.tight_layout()
+    plt.savefig(os.path.join(os.path.dirname(__file__), 'heatmap.png'))
+    plt.close()
+    print("Heatmap saved to heatmap.png can be viewed")
     
     #---------------------------------------------------------------
-    #  Identitfying quality (this here we range low and high quality then see how much content of what was included on average how much alchol,acid,vol acid,sulphates a column has )
+    #  Identitfying quality 
     #---------------------------------------------------------------    
 
     # high quality (7-8) vs low quality (3-4) chemical profile comparison
@@ -80,9 +76,6 @@ if __name__ == '__main__':
     #---------------------------------------------------------------
     #  Feature selection(SelectKBest)
     #---------------------------------------------------------------    
-
-    # (SelectKBest is builtin just ranks the importance of features and 
-    #  part of prep work)
 
     #load input out put set
     X = df.drop(['quality'],axis=1)
@@ -108,19 +101,9 @@ if __name__ == '__main__':
     #---------------------------------------------------------------
     #  training/testing data 
     #---------------------------------------------------------------
-
-
-    #Separate data into training / testing sets (123321 as a seed for train_test_split we train and test so the model can train it self on some of the data the test itself with the remaining)
     
     XTrain,XTest,yTrain,yTest= train_test_split(X,y, random_state=seed)
-    """
-    (  fit_transform on training data:
-    fit — the scaler looks at the training data and learns its mean and standard deviation for every feature.
-    transform — it then applies that scaling to the training data.
-    So it does two things at once — learn the scale, then apply it.
-    transform only on test data: )
-    """
-    # Scale features (used to standardize my unit ranges)
+    # Scale features 
     scaler        = StandardScaler()
     XTrain_scaled = scaler.fit_transform(XTrain)
     XTest_scaled  = scaler.transform(XTest)
@@ -129,20 +112,7 @@ if __name__ == '__main__':
     #---------------------------------------------------------------
     #  1st model linear regression
     #---------------------------------------------------------------
-    """ ####################################
-        # R2 Score — measures how much of the variation in quality the model explains (0 to 1)
-        # 0.0 = explains nothing   0.5 = explains half   1.0 = perfect
-        # Train vs Test gap reveals fit:
-        #   both low + close    = underfit (model too simple)
-        #   train high test low = overfit (model memorized training data)
-        #   both high + close   = good fit
-        # Our result: Train 0.38 / Test 0.27 — both low = underfit
-        # wine quality has complex interactions between chemicals a straight line cant fully capture
-        # low R2 here is not a failure — its a finding that tells us linear regression
-        # is the wrong tool for this problem and points us toward trying classification models next
-        transform only on test data: )
-        ####################################
-    """
+
     ## fitting training and testing linear
     Linear_reg_model = LinearRegression()
     Linear_reg_model.fit(XTrain,yTrain)
@@ -153,21 +123,6 @@ if __name__ == '__main__':
     print(Linear_reg_model.score(XTest,yTest))
     print("\nNote: R2 of ~0.31 means that the model explains only 31% of variance in quality.")
 
-    """ ####################################
-    varinance refers to data spread)
-    Your model is saying — out of all the reasons wines score differently from each other, I can account for 31% of those reasons using the chemical features.
-    The other 69% of why wines score differently? The model has no explanation for it.
-    ####################################
-    """ 
-    ###########
-    ###########
-    #########     LOOK AT UR RESPLOT TO SPEAK ON IT 
-    """
-    Residual plots are specific to regression models — they show how far off your predicted numbers are from the actual numbers on a continuous scale.
-    Logistic Regression and KNN are classifiers — they predict categories (5, 6, 7) not continuous numbers. For classifiers you use a confusion matrix instead, which shows which categories got misclassified.
-    Regression model  →  residual plot    (how far off was the number)
-    Classification model  →  confusion matrix  (which category did it get wrong)
-    """
     # Residual plot
     plt.figure(figsize=(8, 5))
     plt.scatter(Linear_reg_model_pred, yTest - Linear_reg_model_pred, alpha=0.5)
@@ -184,6 +139,7 @@ if __name__ == '__main__':
     #---------------------------------------------------------------
     #  2nd Model - logistic Regression
     #---------------------------------------------------------------
+
     log_model = LogisticRegression(max_iter=2000)
     log_model.fit(XTrain_scaled, yTrain)
     log_preds = log_model.predict(XTest_scaled)
@@ -196,36 +152,9 @@ if __name__ == '__main__':
     print("NOTE: Model predicts scores 5 and 6  well but fails on scores")
     print("3, 4, and 8 — directly caused by class imbalance.")
 
-    """
-        # Classification Report
-    # ─────────────────────────────────────────────────────
-    # What it is:
-    #   A breakdown of how well your classifier predicted each category individually
-    #   instead of just giving one overall accuracy number
-    # What it prints:
-    #   precision  — of all the times the model predicted a score, how often was it right
-    #                ex: predicted score 5 100 times, 69 were actually 5 = 0.69 precision
-    #   recall     — of all the actual wines of that score, how many did the model catch
-    #                ex: 168 actual score 5 wines, model correctly found 111 = 0.66 recall
-    #   f1-score   — balance between precision and recall combined into one number
-    #                0.0 = terrible   1.0 = perfect
-    #   support    — how many wines of that score actually exist in the test set
-    #                this is where you see the imbalance — score 5 has 168, score 3 has 5
-    # How it is determined:
-    #   compares your model's predictions against the actual known labels
-    #   in the test set row by row and calculates each metric per class
-    # What it is used for:
-    #   overall accuracy alone is misleading with imbalanced data
-    #   a model can be 61% accurate just by guessing 5 and 6 every time
-    #   the report exposes which scores the model actually handles vs which it ignores
-    #   in our case scores 3, 4, 8 show 0.00 across the board — model never predicts them
-    #   that is the class imbalance problem made visible
-
-    """
     #---------------------------------------------------------------
     #  3rd model KNN Classifier
     #---------------------------------------------------------------
-
 
     # fitting training and testing kneighbor
     knn_model = KNeighborsClassifier()
@@ -243,7 +172,6 @@ if __name__ == '__main__':
 
     #Confusion Matrix
     cmat = confusion_matrix(yTest, knn_predict)
-    plt.show()
     plt.figure(figsize=(8, 6))
     sns.heatmap(cmat, annot=True, fmt='d', cmap='Blues',
                 xticklabels=sorted(y.unique()),
@@ -258,17 +186,15 @@ if __name__ == '__main__':
 
 
 
-
-#---------------------------------------------------------------
-#  Conclusion
-#---------------------------------------------------------------
+    #---------------------------------------------------------------
+    #  Conclusion
+    #---------------------------------------------------------------
 
     print("\n\n------------------ Conclusion ------------------")
     print("All three models underperform on rare quality scores 3, 4, 8 ")
-    print("becase of class imbalance. 82.5% of wines are rated 5 or 6.")
-    print("The models are not broken and working fine, but the data is limited")
+    print("because of class imbalance. 82.5% of wines are rated 5 or 6.")
+    print("The models are not broken and are working fine, but the data is limited.")
     print("Our next should be to balance the data set before modeling")
 
 
 
-####################### FINDINGS ########################
