@@ -1,6 +1,7 @@
-<img src="winegrowthquality.png" width="150" align="left"/>
-
-# Wine Quality Analysis
+<h1>
+  <img src="winegrowthquality.png" width="80" style="vertical-align: middle; margin-right: 10px;">
+  Wine Quality Analysis
+</h1>
 
 Analysis of 1,599 red wines using Python to identify the chemical factors that predict wine quality ratings (scored 3-8).
 
